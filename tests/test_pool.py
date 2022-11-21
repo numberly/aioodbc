@@ -1,6 +1,5 @@
 import asyncio
 import time
-
 import pytest
 import aioodbc
 from aioodbc import Pool, Connection
@@ -56,8 +55,8 @@ async def test_release(pool):
 
 
 @pytest.mark.asyncio
-async def test_op_error_release(loop, pool_maker, pg_server_local):
-    pool = await pool_maker(loop, dsn=pg_server_local['dsn'], autocommit=True)
+async def test_op_error_release(loop, pool_maker, dsn):
+    pool = await pool_maker(loop, dsn=dsn, autocommit=True)
 
     async with pool.acquire() as conn:
         async def execute():
@@ -67,10 +66,7 @@ async def test_op_error_release(loop, pool_maker, pg_server_local):
                 await conn.execute('SELECT 1; SELECT pg_sleep(1);')
 
         async def _kill_conn():
-            await asyncio.sleep(2)
-            await pg_server_local['container'].kill()
-            await pg_server_local['container'].delete(v=True, force=True)
-            pg_server_local['container'] = None
+            pool.close()
 
         result = await asyncio.gather(
             _kill_conn(), execute(), return_exceptions=True)
@@ -162,7 +158,7 @@ async def test_parallel_tasks(loop, pool_maker, dsn):
     fut1 = pool.acquire()
     fut2 = pool.acquire()
 
-    conn1, conn2 = await asyncio.gather(fut1, fut2, loop=loop)
+    conn1, conn2 = await asyncio.gather(fut1, fut2)
     assert 2 == pool.size
     assert 0 == pool.freesize
     assert {conn1, conn2} == pool._used
@@ -191,8 +187,7 @@ async def test_parallel_tasks_more(loop, pool_maker, dsn):
     fut2 = pool.acquire()
     fut3 = pool.acquire()
 
-    conn1, conn2, conn3 = await asyncio.gather(fut1, fut2, fut3,
-                                               loop=loop)
+    conn1, conn2, conn3 = await asyncio.gather(fut1, fut2, fut3)
     assert 3 == pool.size
     assert 0 == pool.freesize
     assert {conn1, conn2, conn3} == pool._used
@@ -239,8 +234,7 @@ async def test__fill_free(loop, pool_maker, dsn):
         assert 0 == pool.freesize
         assert 1 == pool.size
 
-        conn = await asyncio.wait_for(pool.acquire(), timeout=0.5,
-                                      loop=loop)
+        conn = await asyncio.wait_for(pool.acquire(), timeout=0.5)
         assert 0 == pool.freesize
         assert 2 == pool.size
         await pool.release(conn)
@@ -278,7 +272,7 @@ async def test_pool_with_connection_recycling(loop, pool_maker, dsn):
     async with pool.acquire() as conn:
         conn1 = conn
 
-    await asyncio.sleep(5, loop=loop)
+    await asyncio.sleep(5)
 
     assert 1 == pool.freesize
     async with pool.acquire() as conn:
@@ -328,12 +322,12 @@ async def test_true_parallel_tasks(loop, pool_maker, dsn):
         conn = await pool.acquire()
         maxsize = max(maxsize, pool.size)
         minfreesize = min(minfreesize, pool.freesize)
-        await asyncio.sleep(0.01, loop=loop)
+        await asyncio.sleep(0.01)
         await pool.release(conn)
         maxsize = max(maxsize, pool.size)
         minfreesize = min(minfreesize, pool.freesize)
 
-    await asyncio.gather(inner(), inner(), loop=loop)
+    await asyncio.gather(inner(), inner())
 
     assert 1 == maxsize
     assert 0 == minfreesize
@@ -361,7 +355,7 @@ async def test_wait_closed(loop, pool_maker, dsn):
     ops = []
 
     async def do_release(conn):
-        await asyncio.sleep(0, loop=loop)
+        await asyncio.sleep(0)
         await pool.release(conn)
         ops.append('release')
 
@@ -372,8 +366,7 @@ async def test_wait_closed(loop, pool_maker, dsn):
     pool.close()
     await asyncio.gather(wait_closed(),
                          do_release(c1),
-                         do_release(c2),
-                         loop=loop)
+                         do_release(c2))
     assert ['release', 'release', 'wait_closed'] == ops
     assert 0 == pool.freesize
 
@@ -416,7 +409,7 @@ async def test_close_with_acquired_connections(loop, pool_maker, dsn):
     pool.close()
 
     with pytest.raises(asyncio.TimeoutError):
-        await asyncio.wait_for(pool.wait_closed(), 0.1, loop=loop)
+        await asyncio.wait_for(pool.wait_closed(), 0.1)
     await conn.close()
     await pool.release(conn)
 

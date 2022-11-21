@@ -1,0 +1,21 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+    steps:
+      - uses: actions/checkout@v1
+      - name: Run tests
+        run: docker-compose up --abort-on-container-exit --exit-code-from aioodbc --attach	aioodbc
+        env:
+          PYTHON_VERSION: ${{ matrix.python }}

@@ -182,7 +182,6 @@ async def test_connect_context_manager(loop, dsn):
 @pytest.mark.parametrize('db', pytest.db_list)
 @pytest.mark.asyncio
 async def test___del__(loop, dsn, recwarn, executor):
-    return
     conn = await aioodbc.connect(dsn=dsn, loop=loop, executor=executor)
     exc_handler = mock.Mock()
     loop.set_exception_handler(exc_handler)

@@ -1,21 +1,13 @@
 aioodbc
 =======
-.. image:: https://travis-ci.com/aio-libs/aioodbc.svg?branch=master
-    :target: https://travis-ci.com/aio-libs/aioodbc
-.. image:: https://coveralls.io/repos/aio-libs/aioodbc/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/aio-libs/aioodbc?branch=master
-.. image:: https://img.shields.io/pypi/v/aioodbc.svg
-    :target: https://pypi.python.org/pypi/aioodbc
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-    :target: https://gitter.im/aio-libs/Lobby
-    :alt: Chat on Gitter
+.. image:: https://github.com/numberly/aioodbc/workflows/test/badge.svg?branch=master
+    :target: https://github.com/numberly/aioodbc/actions
 
-**aioodbc** is a Python 3.5+ module that makes it possible to access ODBC_ databases
+
+**aioodbc** is a Python 3.8+ module that makes it possible to access ODBC_ databases
 with asyncio_. It relies on the awesome pyodbc_ library and preserves the same look and
-feel. *aioodbc* was written using `async/await` syntax (PEP492_) and thus is not compatible
-with Python versions older than 3.5.  Internally *aioodbc* employs threads to avoid
-blocking the event loop, threads_ are not that as bad as you think!. Other
-drivers like motor_ use the same approach.
+feel. Internally *aioodbc* employs threads to avoid blocking the event loop, threads_
+are not that as bad as you think!. Other drivers like motor_ use the same approach.
 
 **aioodbc** is fully compatible and tested with uvloop_. Take a look at the test
 suite, all tests are executed with both the default event loop and uvloop_.
@@ -55,7 +47,7 @@ Properties are unchanged, so ``conn.prop`` is correct as well as
 
 
     async def test_example():
-        dsn = 'Driver=SQLite;Database=sqlite.db'
+        dsn = 'Driver=SQLite3;Database=sqlite.db'
         conn = await aioodbc.connect(dsn=dsn, loop=loop)
 
         cur = await conn.cursor()
@@ -84,7 +76,7 @@ Connection pooling is ported from aiopg_ and relies on PEP492_ features:
 
 
     async def test_pool():
-        dsn = 'Driver=SQLite;Database=sqlite.db'
+        dsn = 'Driver=SQLite3;Database=sqlite.db'
         pool = await aioodbc.create_pool(dsn=dsn, loop=loop)
 
         async with pool.acquire() as conn:
@@ -115,7 +107,7 @@ protocol:
 
 
     async def test_example():
-        dsn = 'Driver=SQLite;Database=sqlite.db'
+        dsn = 'Driver=SQLite3;Database=sqlite.db'
 
         async with aioodbc.create_pool(dsn=dsn, loop=loop) as pool:
             async with pool.acquire() as conn:
@@ -145,24 +137,12 @@ then::
 Run tests
 ---------
 
-For testing purposes you need to install docker_ and the development
-requirements::
+For testing purposes you need to install docker_
 
-    $ pip install -r requirements-dev.txt
+    $ make test
 
-In order to simplify development you should install the provided docker container.
-This way you don't need to install any databases or other system libraries, everything happens inside the container.
-
-Then just execute::
-
-    $ make docker_build
-    $ make docker_test
-
-The test will automatically pull images and build containers with
+The test will automatically build container with
 the required databases.
-
-*NOTE:* Running tests requires Python 3.6 or higher.
-
 
 Other SQL Drivers
 -----------------
@@ -174,7 +154,7 @@ Other SQL Drivers
 Requirements
 ------------
 
-* Python_ 3.5+
+* Python_ 3.8+
 * pyodbc_
 * uvloop_ (optional)
 
