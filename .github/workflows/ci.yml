@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Setup
+        run: |
+          apt-get update && apt-get install -y unixODBC wget g++ unixodbc-dev odbc-postgresql libmyodbc libsqlite-dev libtool build-essential && \
+          odbcinst -i -d -f /usr/share/libmyodbc/odbcinst.ini && \
+          wget http://archive.ubuntu.com/ubuntu/pool/universe/s/sqliteodbc/libsqliteodbc_0.9992-0.1_amd64.deb && \
+          dpkg -i libsqliteodbc_0.9992-0.1_amd64.deb
+      - name: Install
+        run: pip install -e /aioodbc/ && pip install -U pip setuptools && pip install -r /aioodbc/requirements-dev.txt
+      - name: Run tests
+        run: pytest
