@@ -6,7 +6,7 @@ loop = asyncio.get_event_loop()
 
 
 async def test_example():
-    dsn = 'Driver=SQLite;Database=sqlite.db'
+    dsn = 'Driver=SQLite3;Database=sqlite.db'
 
     async with aioodbc.create_pool(dsn=dsn, loop=loop) as pool:
         async with pool.acquire() as conn:

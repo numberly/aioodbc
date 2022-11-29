@@ -44,7 +44,7 @@ class Pool(asyncio.AbstractServer):
         self._acquiring = 0
         self._recycle = pool_recycle
         self._free = collections.deque(maxlen=maxsize)
-        self._cond = asyncio.Condition(loop=loop)
+        self._cond = asyncio.Condition()
         self._used = set()
         self._closing = False
         self._closed = False
